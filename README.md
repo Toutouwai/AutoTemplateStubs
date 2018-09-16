@@ -22,6 +22,23 @@ Now enjoy code completion, etc, in your IDE.
 
 ![stubs](https://user-images.githubusercontent.com/1538852/45592324-d0552a80-b9bd-11e8-9d64-2f29be754c67.gif)
 
+## Adding data types for non-core Fieldtype modules
+
+The module includes the data types returned by all the core Fieldtype modules. If you want to add data types returned by one or more non-core Fieldtype modules then you can hook the `AutoTemplateStubs::getReturnTypes()` method. For example, in `/site/ready.php`:
+
+```php
+// Add data types for some non-core Fieldtype modules
+$wire->addHookAfter('AutoTemplateStubs::getReturnTypes', function(HookEvent $event) {
+    $extra_types = [
+        'FieldtypeDecimal' => 'string',
+        'FieldtypeLeafletMapMarker' => 'LeafletMapMarker',
+        'FieldtypeRepeaterMatrix' => 'RepeaterMatrixPageArray',
+        'FieldtypeTable' => 'TableRows',
+    ];
+    $event->return = $event->return + $extra_types;
+});
+```
+
 ## Troubleshooting
 
 The module will create stub files in the `stubs` directory inside the `AutoTemplateStubs` module directory, so this directory needs to be writable.
