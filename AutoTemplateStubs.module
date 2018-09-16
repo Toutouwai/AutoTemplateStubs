@@ -1,0 +1,257 @@
+<?php namespace ProcessWire;
+
+/**
+ *
+ * Auto Template Stubs
+ * Inspired by and much credit to Template Stubs module by mindplay.dk
+ *
+ * @author Robin Sallis
+ *
+ * ProcessWire 3.x
+ * Copyright (C) 2011 by Ryan Cramer
+ * Licensed under GNU/GPL v2, see LICENSE.TXT
+ *
+ * http://www.processwire.com
+ * http://www.ryancramer.com
+ *
+ */
+
+class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
+
+	/**
+	 * Module information
+	 */
+	public static function getModuleInfo() {
+		return array(
+			'title' => 'Auto Template Stubs',
+			'summary' => 'Automatically creates stub files for templates when fields or fieldgroups are saved.',
+			'version' => '0.1.0',
+			'author' => 'Robin Sallis',
+			'href' => 'https://github.com/Toutouwai/AutoTemplateStubs',
+			'icon' => 'code',
+			'singular' => true,
+			'autoload' => true,
+			'requires' => 'ProcessWire>=3.0.0',
+		);
+	}
+
+	/**
+	 * Skip these fieldtypes because they aren't usable within a template file
+	 */
+	public $skip_fieldtypes = array(
+		'FieldtypeFieldsetOpen',
+		'FieldtypeFieldsetTabOpen',
+		'FieldtypeFieldsetGroup',
+		'FieldtypeFieldsetClose',
+	);
+
+	/**
+	 * Skip these system templates
+	 */
+	public $skip_templates = array(
+		'admin',
+		'form-builder',
+		'language',
+		'permission',
+		'role',
+	);
+
+	/**
+	 * Construct
+	 */
+	public function __construct() {
+		// Default config
+		$this->class_prefix = 'tpl_';
+	}
+
+	/**
+	 * Ready
+	 */
+	public function ready() {
+		$this->addHookAfter('Fields::save', $this, 'fieldSaved');
+		$this->addHookAfter('Fields::saveFieldgroupContext', $this, 'fieldContextSaved');
+		$this->addHookAfter('Fieldgroups::save', $this, 'fieldgroupSaved');
+	}
+
+	/**
+	 * Get array of data types returned by core fieldtypes
+	 *
+	 * @return array
+	 */
+	public function ___getReturnTypes() {
+		return array(
+			'FieldtypeCache' => 'array',
+			'FieldtypeCheckbox' => 'int',
+			'FieldtypeComments' => 'CommentArray',
+			'FieldtypeDatetime' => 'int|string',
+			'FieldtypeEmail' => 'string',
+			'FieldtypeFieldsetPage' => 'FieldsetPage',
+			'FieldtypeFile' => function (Field $field) {
+				switch($field->outputFormat) {
+					case FieldtypeFile::outputFormatArray:
+						return 'Pagefiles';
+					case FieldtypeFile::outputFormatSingle:
+						return 'Pagefile|null';
+					case FieldtypeFile::outputFormatString:
+						return 'string';
+					default: // outputFormatAuto
+						return $field->maxFiles == 1 ? 'Pagefile|null' : 'Pagefiles';
+				}
+			},
+			'FieldtypeFloat' => 'float',
+			'FieldtypeImage' => function (Field $field) {
+				switch($field->outputFormat) {
+					case FieldtypeImage::outputFormatArray:
+						return 'Pagefiles';
+					case FieldtypeImage::outputFormatSingle:
+						return 'Pagefile|null';
+					case FieldtypeImage::outputFormatString:
+						return 'string';
+					default: // outputFormatAuto
+						return $field->maxFiles == 1 ? 'Pagefile|null' : 'Pagefiles';
+				}
+			},
+			'FieldtypeInteger' => 'int',
+			'FieldtypeModule' => 'string',
+			'FieldtypeOptions' => 'SelectableOptionArray',
+			'FieldtypePage' => function (Field $field) {
+				switch($field->derefAsPage) {
+					case FieldtypePage::derefAsPageOrFalse:
+						return 'Page|false';
+					case FieldtypePage::derefAsPageOrNullPage:
+						return 'Page|NullPage';
+					default: // derefAsPageArray
+						return 'PageArray';
+				}
+			},
+			'FieldtypePageTable' => 'PageArray',
+			'FieldtypePageTitle' => 'string',
+			'FieldtypePageTitleLanguage' => 'string',
+			'FieldtypePassword' => 'Password',
+			'FieldtypeRepeater' => 'RepeaterPageArray',
+			'FieldtypeSelector' => 'string',
+			'FieldtypeText' => 'string',
+			'FieldtypeTextLanguage' => 'string',
+			'FieldtypeTextarea' => 'string',
+			'FieldtypeTextareaLanguage' => 'string',
+		);
+	}
+
+	/**
+	 * Field saved
+	 *
+	 * @param HookEvent $event
+	 */
+	protected function fieldSaved(HookEvent $event) {
+		$field = $event->arguments(0);
+		if(in_array((string) $field->type, $this->skip_fieldtypes)) return;
+		foreach($field->getTemplates() as $template) {
+			$this->generateTemplateStub($template);
+		}
+	}
+
+	/**
+	 * Field context saved
+	 *
+	 * @param HookEvent $event
+	 */
+	protected function fieldContextSaved(HookEvent $event) {
+		$fieldgroup = $event->arguments(1);
+		foreach($fieldgroup->getTemplates() as $template) {
+			if(in_array($template->name, $this->skip_templates)) continue;
+			$this->generateTemplateStub($template);
+		}
+	}
+
+	/**
+	 * Fieldgroup saved
+	 *
+	 * @param HookEvent $event
+	 */
+	protected function fieldgroupSaved(HookEvent $event) {
+		$fieldgroup = $event->arguments(0);
+		foreach($fieldgroup->getTemplates() as $template) {
+			if(in_array($template->name, $this->skip_templates)) continue;
+			$this->generateTemplateStub($template);
+		}
+	}
+
+	/**
+	 * Get stub info for a field
+	 *
+	 * @param Field $field
+	 * @param Template|null $template
+	 * @return array
+	 */
+	protected function getFieldInfo(Field $field, Template $template = null) {
+		if($template) $field = $template->fieldgroup->getFieldContext($field);
+		$field_type = (string) $field->type;
+		$return_types = $this->getReturnTypes();
+		$return_type = 'mixed'; // default
+		if(!empty($return_types[$field_type])) $return_type = $return_types[$field_type];
+		if(is_callable($return_type)) $return_type = $return_type($field);
+		return array(
+			'label' => $field->label,
+			'returns' => $return_type,
+		);
+	}
+
+	/**
+	 * Generate stub file for a template
+	 *
+	 * @param Template $template
+	 */
+	public function generateTemplateStub($template) {
+		$class_name = $this->class_prefix . $template->name;
+		$contents = "<?php namespace ProcessWire;\n\n";
+		$template_name = $template->name;
+		if($template->label) $template_name .= " ($template->label)";
+		$contents .= "/**\n * Template: $template_name\n *";
+		foreach($template->fields as $field) {
+			if(in_array((string) $field->type, $this->skip_fieldtypes)) continue;
+			$field_info = $this->getFieldInfo($field, $template);
+			$contents .= "\n * @property {$field_info['returns']} \${$field->name} {$field_info['label']}";
+		}
+		$contents .= "\n */\nclass $class_name extends Page {}";
+		file_put_contents($this->wire()->config->paths->$this . "stubs/$class_name.php", $contents);
+	}
+
+	/**
+	 * Install
+	 */
+	public function ___install() {
+		// Generate stub files for all templates
+		foreach($this->wire()->templates as $template) {
+			if(in_array($template->name, $this->skip_templates)) continue;
+			$this->generateTemplateStub($template);
+		}
+	}
+
+	/**
+	 * Uninstall
+	 */
+	public function ___uninstall() {
+		// Delete all stub files
+		$stub_files = glob($this->wire()->config->paths->$this . 'stubs/*');
+		foreach($stub_files as $file) {
+			if(is_file($file)) unlink($file);
+		}
+	}
+
+	/**
+	 * Config inputfields
+	 *
+	 * @param InputfieldWrapper $inputfields
+	 */
+	public function getModuleConfigInputfields($inputfields) {
+		/* @var InputfieldText $f */
+		$f = $this->wire('modules')->InputfieldText;
+		$f_name = 'class_prefix';
+		$f->name = $f_name;
+		$f->label = $this->_('Class prefix');
+		$f->description = $this->_('Optionally enter a class-name prefix to apply to generated stub classes.');
+		$f->value = $this->$f_name;
+		$inputfields->add($f);
+	}
+
+}
