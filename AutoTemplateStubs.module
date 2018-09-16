@@ -25,7 +25,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 		return array(
 			'title' => 'Auto Template Stubs',
 			'summary' => 'Automatically creates stub files for templates when fields or fieldgroups are saved.',
-			'version' => '0.1.0',
+			'version' => '0.1.1',
 			'author' => 'Robin Sallis',
 			'href' => 'https://github.com/Toutouwai/AutoTemplateStubs',
 			'icon' => 'code',
@@ -71,6 +71,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 		$this->addHookAfter('Fields::save', $this, 'fieldSaved');
 		$this->addHookAfter('Fields::saveFieldgroupContext', $this, 'fieldContextSaved');
 		$this->addHookAfter('Fieldgroups::save', $this, 'fieldgroupSaved');
+		$this->addHookBefore('Modules::saveModuleConfigData', $this, 'moduleConfigSaved');
 	}
 
 	/**
@@ -177,6 +178,23 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 	}
 
 	/**
+	 * Module config saved
+	 *
+	 * @param HookEvent $event
+	 */
+	protected function moduleConfigSaved(HookEvent $event) {
+		$class = $event->arguments(0);
+		$data = $event->arguments(1);
+		if($class != $this) return;
+		if($data['class_prefix'] !== $this->class_prefix) {
+			// Class name prefix changed so regenerate all stub files
+			$this->class_prefix = $data['class_prefix'];
+			$this->deleteAllTemplateStubs();
+			$this->generateAllTemplateStubs();
+		}
+	}
+
+	/**
 	 * Get stub info for a field
 	 *
 	 * @param Field $field
@@ -201,7 +219,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 	 *
 	 * @param Template $template
 	 */
-	public function generateTemplateStub($template) {
+	protected function generateTemplateStub($template) {
 		$class_name = $this->class_prefix . $template->name;
 		$contents = "<?php namespace ProcessWire;\n\n";
 		$template_name = $template->name;
@@ -217,10 +235,9 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 	}
 
 	/**
-	 * Install
+	 * Generate stub files for all templates
 	 */
-	public function ___install() {
-		// Generate stub files for all templates
+	protected function generateAllTemplateStubs() {
 		foreach($this->wire()->templates as $template) {
 			if(in_array($template->name, $this->skip_templates)) continue;
 			$this->generateTemplateStub($template);
@@ -228,14 +245,27 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 	}
 
 	/**
-	 * Uninstall
+	 * Delete stub files for all templates
 	 */
-	public function ___uninstall() {
-		// Delete all stub files
+	protected function deleteAllTemplateStubs() {
 		$stub_files = glob($this->wire()->config->paths->$this . 'stubs/*');
 		foreach($stub_files as $file) {
 			if(is_file($file)) unlink($file);
 		}
+	}
+
+	/**
+	 * Install
+	 */
+	public function ___install() {
+		$this->generateAllTemplateStubs();
+	}
+
+	/**
+	 * Uninstall
+	 */
+	public function ___uninstall() {
+		$this->deleteAllTemplateStubs();
 	}
 
 	/**
