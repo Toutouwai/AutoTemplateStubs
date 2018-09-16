@@ -248,8 +248,8 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 		$f = $this->wire('modules')->InputfieldText;
 		$f_name = 'class_prefix';
 		$f->name = $f_name;
-		$f->label = $this->_('Class prefix');
-		$f->description = $this->_('Optionally enter a class-name prefix to apply to generated stub classes.');
+		$f->label = $this->_('Class name prefix');
+		$f->description = $this->_('Optionally enter a class name prefix to apply to generated stub classes.');
 		$f->value = $this->$f_name;
 		$inputfields->add($f);
 	}

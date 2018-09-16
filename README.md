@@ -8,7 +8,7 @@ Stub files are useful if you are using an IDE (e.g. PhpStorm) that provides code
 
 [Install](http://modules.processwire.com/install-uninstall/) the Auto Template Stubs module.
 
-Change the class prefix setting in the module config if you like. It's good to use a class prefix because it reduces the chance that the class name will clash with an existing class name.
+Change the class name prefix setting in the module config if you like. It's good to use a class name prefix because it reduces the chance that the class name will clash with an existing class name.
 
 ## Usage
 
