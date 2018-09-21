@@ -180,7 +180,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 		// If fieldgroup renamed, delete old stub
 		// There is surely a better way to get the existing fieldgroup name but can't get my head around track changes
 		$sql = "SELECT name FROM fieldgroups WHERE id = {$fieldgroup->id} LIMIT 1";
-		$query = $this->database->query($sql);
+		$query = $this->wire()->database->query($sql);
 		$existing_name = $query->fetch(\PDO::FETCH_COLUMN);
 		if($fieldgroup->name !== $existing_name) $this->deleteTemplateStub($existing_name);
 	}
