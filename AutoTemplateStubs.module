@@ -25,7 +25,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 		return array(
 			'title' => 'Auto Template Stubs',
 			'summary' => 'Automatically creates stub files for templates when fields or fieldgroups are saved.',
-			'version' => '0.1.2',
+			'version' => '0.1.3',
 			'author' => 'Robin Sallis',
 			'href' => 'https://github.com/Toutouwai/AutoTemplateStubs',
 			'icon' => 'code',
@@ -104,13 +104,13 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 			'FieldtypeImage' => function (Field $field) {
 				switch($field->outputFormat) {
 					case FieldtypeImage::outputFormatArray:
-						return 'Pagefiles';
+						return 'Pageimages';
 					case FieldtypeImage::outputFormatSingle:
-						return 'Pagefile|null';
+						return 'Pageimage|null';
 					case FieldtypeImage::outputFormatString:
 						return 'string';
 					default: // outputFormatAuto
-						return $field->maxFiles == 1 ? 'Pagefile|null' : 'Pagefiles';
+						return $field->maxFiles == 1 ? 'Pageimage|null' : 'Pageimages';
 				}
 			},
 			'FieldtypeInteger' => 'int',
