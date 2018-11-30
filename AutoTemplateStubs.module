@@ -25,7 +25,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 		return array(
 			'title' => 'Auto Template Stubs',
 			'summary' => 'Automatically creates stub files for templates when fields or fieldgroups are saved.',
-			'version' => '0.1.3',
+			'version' => '0.1.4',
 			'author' => 'Robin Sallis',
 			'href' => 'https://github.com/Toutouwai/AutoTemplateStubs',
 			'icon' => 'code',
@@ -238,7 +238,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 	 * @param Template $template
 	 */
 	protected function generateTemplateStub(Template $template) {
-		$class_name = $this->class_prefix . $template->name;
+		$class_name = $this->class_prefix . str_replace('-',  '_', $template->name);
 		$contents = "<?php namespace ProcessWire;\n\n";
 		$template_name = $template->name;
 		if($template->label) $template_name .= " ($template->label)";
