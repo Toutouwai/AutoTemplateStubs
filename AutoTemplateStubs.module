@@ -25,7 +25,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 		return array(
 			'title' => 'Auto Template Stubs',
 			'summary' => 'Automatically creates stub files for templates when fields or fieldgroups are saved.',
-			'version' => '0.1.4',
+			'version' => '0.1.5',
 			'author' => 'Robin Sallis',
 			'href' => 'https://github.com/Toutouwai/AutoTemplateStubs',
 			'icon' => 'code',
@@ -87,7 +87,9 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 			'FieldtypeComments' => 'CommentArray',
 			'FieldtypeDatetime' => 'int|string',
 			'FieldtypeEmail' => 'string',
-			'FieldtypeFieldsetPage' => 'FieldsetPage',
+			'FieldtypeFieldsetPage' => function (Field $field) {
+				return "FieldsetPage|{$this->class_prefix}repeater_{$field->name}";
+			},
 			'FieldtypeFile' => function (Field $field) {
 				switch($field->outputFormat) {
 					case FieldtypeFile::outputFormatArray:
@@ -130,7 +132,9 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 			'FieldtypePageTitle' => 'string',
 			'FieldtypePageTitleLanguage' => 'string',
 			'FieldtypePassword' => 'Password',
-			'FieldtypeRepeater' => 'RepeaterPageArray',
+			'FieldtypeRepeater' => function (Field $field) {
+				return "RepeaterPageArray|{$this->class_prefix}repeater_{$field->name}[]";
+			},
 			'FieldtypeSelector' => 'string',
 			'FieldtypeText' => 'string',
 			'FieldtypeTextLanguage' => 'string',
