@@ -25,7 +25,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 		return array(
 			'title' => 'Auto Template Stubs',
 			'summary' => 'Automatically creates stub files for templates when fields or fieldgroups are saved.',
-			'version' => '0.1.6',
+			'version' => '0.1.7',
 			'author' => 'Robin Sallis',
 			'href' => 'https://github.com/Toutouwai/AutoTemplateStubs',
 			'icon' => 'code',
@@ -251,6 +251,13 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 			if(in_array((string) $field->type, $this->skip_fieldtypes)) continue;
 			$field_info = $this->getFieldInfo($field, $template);
 			$contents .= "\n * @property {$field_info['returns']} \${$field->name} {$field_info['label']}";
+			if($this->wire('modules')->isInstalled('FieldAliases') && $field->fa_aliases) {
+				$fa = $this->wire('modules')->get('FieldAliases');
+				foreach(explode(' ', $field->fa_aliases) as $alias) {
+					$alias_str = $fa->open_delimiter . $alias . $fa->close_delimiter;
+					$contents .= "\n * @property {$field_info['returns']} \$$alias_str {$field_info['label']}";
+				}
+			}
 		}
 		$contents .= "\n */\nclass $class_name extends Page {}";
 		file_put_contents($this->wire()->config->paths->$this . "stubs/$class_name.php", $contents);
