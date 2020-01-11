@@ -316,6 +316,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 
 	/**
 	 * Upgrade
+	 * 
 	 * @param $fromVersion
 	 * @param $toVersion
 	 */
