@@ -25,7 +25,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 		return array(
 			'title' => 'Auto Template Stubs',
 			'summary' => 'Automatically creates stub files for templates when fields or fieldgroups are saved.',
-			'version' => '0.1.7',
+			'version' => '0.1.8',
 			'author' => 'Robin Sallis',
 			'href' => 'https://github.com/Toutouwai/AutoTemplateStubs',
 			'icon' => 'code',
@@ -60,8 +60,8 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 	 * Construct
 	 */
 	public function __construct() {
-		// Default config
 		$this->class_prefix = 'tpl_';
+		$this->stubs_path = $this->wire('config')->paths->cache . $this->className . '/';
 	}
 
 	/**
@@ -184,7 +184,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 		// If fieldgroup renamed, delete old stub
 		// There is surely a better way to get the existing fieldgroup name but can't get my head around track changes
 		$sql = "SELECT name FROM fieldgroups WHERE id = {$fieldgroup->id} LIMIT 1";
-		$query = $this->wire()->database->query($sql);
+		$query = $this->wire('database')->query($sql);
 		$existing_name = $query->fetch(\PDO::FETCH_COLUMN);
 		if($fieldgroup->name !== $existing_name) $this->deleteTemplateStub($existing_name);
 	}
@@ -260,14 +260,14 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 			}
 		}
 		$contents .= "\n */\nclass $class_name extends Page {}";
-		file_put_contents($this->wire()->config->paths->$this . "stubs/$class_name.php", $contents);
+		file_put_contents($this->stubs_path . "$class_name.php", $contents);
 	}
 
 	/**
 	 * Generate stub files for all templates
 	 */
 	protected function generateAllTemplateStubs() {
-		foreach($this->wire()->templates as $template) {
+		foreach($this->wire('templates') as $template) {
 			if(in_array($template->name, $this->skip_templates)) continue;
 			$this->generateTemplateStub($template);
 		}
@@ -280,7 +280,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 	 */
 	protected function deleteTemplateStub($fieldgroup_name) {
 		$stub_name = $this->class_prefix . $fieldgroup_name;
-		$file_path = $this->wire()->config->paths->$this . "stubs/$stub_name.php";
+		$file_path = $this->stubs_path . "$stub_name.php";
 		if(is_file($file_path)) unlink($file_path);
 	}
 
@@ -288,7 +288,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 	 * Delete stub files for all templates
 	 */
 	protected function deleteAllTemplateStubs() {
-		$stub_files = glob($this->wire()->config->paths->$this . 'stubs/*');
+		$stub_files = glob($this->stubs_path . '*');
 		foreach($stub_files as $file) {
 			if(is_file($file)) unlink($file);
 		}
@@ -298,6 +298,9 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 	 * Install
 	 */
 	public function ___install() {
+		if(!is_dir($this->stubs_path)) {
+			$this->wire('files')->mkdir($this->stubs_path);
+		}
 		$this->generateAllTemplateStubs();
 	}
 
@@ -306,6 +309,9 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 	 */
 	public function ___uninstall() {
 		$this->deleteAllTemplateStubs();
+		if(is_dir($this->stubs_path)) {
+			$this->wire('files')->rmdir($this->stubs_path);
+		}
 	}
 
 	/**
@@ -314,6 +320,14 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 	 * @param $toVersion
 	 */
 	public function ___upgrade($fromVersion, $toVersion) {
+		// Upgrade from < v0.1.8: remove old stubs directory
+		if(version_compare($fromVersion, '0.1.8', '<')) {
+			$old_stubs_dir = $this->wire('config')->paths->$this . 'stubs/';
+			if(is_dir($old_stubs_dir)) {
+				$this->wire('files')->rmdir($old_stubs_dir, true);
+			}
+		}
+
 		// Rebuild template stubs
 		$this->deleteAllTemplateStubs();
 		$this->generateAllTemplateStubs();
@@ -325,8 +339,9 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 	 * @param InputfieldWrapper $inputfields
 	 */
 	public function getModuleConfigInputfields($inputfields) {
+		$modules = $this->wire('modules');
 		/* @var InputfieldText $f */
-		$f = $this->wire('modules')->InputfieldText;
+		$f = $modules->InputfieldText;
 		$f_name = 'class_prefix';
 		$f->name = $f_name;
 		$f->label = $this->_('Class name prefix');
