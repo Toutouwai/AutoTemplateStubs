@@ -39,10 +39,6 @@ $wire->addHookAfter('AutoTemplateStubs::getReturnTypes', function(HookEvent $eve
 });
 ```
 
-## Troubleshooting
-
-The module will create stub files in the `stubs` directory inside the `AutoTemplateStubs` module directory, so this directory needs to be writable.
-
 ## Credits
 
 Inspired by and much credit to the [Template Stubs](https://modules.processwire.com/modules/template-stubs/) module by mindplay.dk.
