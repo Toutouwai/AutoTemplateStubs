@@ -25,7 +25,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 		return array(
 			'title' => 'Auto Template Stubs',
 			'summary' => 'Automatically creates stub files for templates when fields or fieldgroups are saved.',
-			'version' => '0.1.8',
+			'version' => '0.2.0',
 			'author' => 'Robin Sallis',
 			'href' => 'https://github.com/Toutouwai/AutoTemplateStubs',
 			'icon' => 'code',
@@ -213,6 +213,11 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 			$this->class_prefix = $data['class_prefix'];
 			$this->deleteAllTemplateStubs();
 			$this->generateAllTemplateStubs();
+		} else if (!empty($data['regenerate_stubs'])) {
+			$this->deleteAllTemplateStubs();
+			$this->generateAllTemplateStubs();
+			$this->message($this->_('Template stubs regenerated.'));
+			unset($data['regenerate_stubs']);
 		}
 	}
 
@@ -348,6 +353,15 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 		$f->label = $this->_('Class name prefix');
 		$f->description = $this->_('Optionally enter a class name prefix to apply to generated stub classes.');
 		$f->value = $this->$f_name;
+		$inputfields->add($f);
+
+		/* @var InputfieldCheckbox $f */
+		$f = $modules->InputfieldCheckbox;
+		$f->name = 'regenerate_stubs';
+		$f->label = $this->_('Regenerate template stubs');
+		$f->icon = 'refresh';
+		$f->collapsed = Inputfield::collapsedYes;
+		$f->description = $this->_('By checking this box and saving module config you can force all template stubs to be regenerated.');
 		$inputfields->add($f);
 	}
 
