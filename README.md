@@ -8,14 +8,20 @@ Stub files are useful if you are using an IDE (e.g. PhpStorm) that provides code
 
 [Install](http://modules.processwire.com/install-uninstall/) the Auto Template Stubs module.
 
-Change the class name prefix setting in the module config if you like. It's good to use a class name prefix because it reduces the chance that the class name will clash with an existing class name.
+## Configuration
+
+* You can change the class name prefix setting in the module config if you like. It's good to use a class name prefix because it reduces the chance that the class name will clash with an existing class name.
+
+* The directory path used to store the stub files is configurable.
+
+* There is a checkbox to manually trigger the regeneration of all stub files if needed.
 
 ## Usage
 
 Add a line near the top of each of your template files to tell your IDE what stub class name to associate with the `$page` variable within the template file. For example, with the default class name prefix you would add the following line at the top of the `home.php` template file:
 
 ```php
-/* @var tpl_home $page */
+/** @var tpl_home $page */
 ```
 
 Now enjoy code completion, etc, in your IDE.
