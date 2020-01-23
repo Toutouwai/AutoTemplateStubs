@@ -25,7 +25,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 		return array(
 			'title' => 'Auto Template Stubs',
 			'summary' => 'Automatically creates stub files for templates when fields or fieldgroups are saved.',
-			'version' => '0.2.0',
+			'version' => '0.2.1',
 			'author' => 'Robin Sallis',
 			'href' => 'https://github.com/Toutouwai/AutoTemplateStubs',
 			'icon' => 'code',
@@ -321,18 +321,6 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 			$this->wire('files')->mkdir($this->stubs_path);
 		}
 		$this->generateAllTemplateStubs();
-	}
-
-	/**
-	 * Uninstall
-	 */
-	public function ___uninstall() {
-		// Module config must be manually loaded here
-		$data = $this->wire('modules')->getModuleConfigData($this->className);
-		$stubs_path = $this->wire('config')->paths->root . ltrim($data['stubs_path_relative'], '/');
-		if(is_dir($stubs_path)) {
-			$this->wire('files')->rmdir($stubs_path, true);
-		}
 	}
 
 	/**
