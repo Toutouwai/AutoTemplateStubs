@@ -25,7 +25,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 		return array(
 			'title' => 'Auto Template Stubs',
 			'summary' => 'Automatically creates stub files for templates when fields or fieldgroups are saved.',
-			'version' => '0.2.1',
+			'version' => '0.2.2',
 			'author' => 'Robin Sallis',
 			'href' => 'https://github.com/Toutouwai/AutoTemplateStubs',
 			'icon' => 'code',
@@ -209,6 +209,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 		$class = $event->arguments(0);
 		$data = $event->arguments(1);
 		if($class != $this) return;
+		$data['stubs_path'] = $this->wire('config')->paths->root . ltrim($data['stubs_path_relative'], '/');
 		if($data['class_prefix'] !== $this->class_prefix) {
 			// Class name prefix changed so regenerate all stub files
 			$this->class_prefix = $data['class_prefix'];
@@ -219,8 +220,9 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 			$this->message($this->_('Template stubs regenerated.'));
 			unset($data['regenerate_stubs']);
 		}
+		$event->arguments(1, $data);
 		// Create stubs directory if it doesn't exist
-		$this->stubs_path = $this->wire('config')->paths->root . ltrim($data['stubs_path_relative'], '/');
+		$this->stubs_path = $data['stubs_path'];
 		if(!is_dir($this->stubs_path)) {
 			$this->wire('files')->mkdir($this->stubs_path);
 			$this->regenerateAllStubs();
