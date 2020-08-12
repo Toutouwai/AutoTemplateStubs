@@ -360,7 +360,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 		$f = $modules->get('InputfieldCheckbox');
 		$f_name = 'custom_page_class_compatible';
 		$f->name = $f_name;
-		$f->label = sprintf($this->_('Name stub files for compatibility with [custom Page classes](%s)'), 'https://processwire.com/blog/posts/pw-3.0.152/#new-ability-to-specify-custom-page-classes');
+		$f->label = sprintf($this->_('Name stub classes for compatibility with [custom Page classes](%s)'), 'https://processwire.com/blog/posts/pw-3.0.152/#new-ability-to-specify-custom-page-classes');
 		$f->notes = $this->_('If checked stub classes will be named according to the camel case "[TemplateName]Page" format used for custom page classes, e.g. BlogPostPage');
 		$f->checked = $this->$f_name === 1 ? 'checked' : '';
 		$inputfields->add($f);

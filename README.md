@@ -10,7 +10,7 @@ Stub files are useful if you are using an IDE (e.g. PhpStorm) that provides code
 
 ## Configuration
 
-* If you're using [custom Page classes](https://processwire.com/blog/posts/pw-3.0.152/#new-ability-to-specify-custom-page-classes) and want code assistance for methods in the custom Page class as well as field names you can tick the "Name stub files for compatibility with custom Page classes" checkbox. This names the template stub files using the same format as for custom Page class names. A side-effect of this is that your IDE may warn you that multiple definitions exist for your custom Page classes.
+* If you're using [custom Page classes](https://processwire.com/blog/posts/pw-3.0.152/#new-ability-to-specify-custom-page-classes) and want code assistance for methods in the custom Page class as well as field names you can tick the "Name stub classes for compatibility with custom Page classes" checkbox. This names the template stub classes using the same format as for custom Page class names. A side-effect of this is that your IDE may warn you that multiple definitions exist for your custom Page classes.
 
 * If you're not using the setting above you have the option to change the class name prefix. It's good to use a class name prefix because it reduces the chance that the class name will clash with an existing class name.
 
@@ -26,7 +26,7 @@ Add a line near the top of each of your template files to tell your IDE what stu
 /** @var tpl_home $page */
 ```
 
-Or if you're using the "Name stub files for compatibility with custom Page classes" setting then it would be:
+Or if you're using the "Name stub classes for compatibility with custom Page classes" setting then it would be:
 
 ```php
 /** @var HomePage $page */
