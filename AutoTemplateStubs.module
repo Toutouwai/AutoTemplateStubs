@@ -44,6 +44,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 	 * Construct
 	 */
 	public function __construct() {
+		parent::__construct();
 		$this->class_prefix = 'tpl_';
 		$this->stubs_path_relative = '/site/templates/AutoTemplateStubs/';
 	}
