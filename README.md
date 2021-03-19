@@ -14,7 +14,7 @@ Stub files are useful if you are using an IDE (e.g. PhpStorm) that provides code
 
 * If you're not using the setting above you have the option to change the class name prefix. It's good to use a class name prefix because it reduces the chance that the class name will clash with an existing class name.
 
-* The directory path used to store the stub files is configurable.
+* The path where AutoTemplateStubs directory will be created is configurable. This directory will contain the stub files.
 
 * There is a checkbox to manually trigger the regeneration of all stub files if needed.
 

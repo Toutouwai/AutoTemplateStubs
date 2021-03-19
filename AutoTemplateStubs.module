@@ -9,13 +9,13 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 		return array(
 			'title' => 'Auto Template Stubs',
 			'summary' => 'Automatically creates stub files for templates when fields or fieldgroups are saved.',
-			'version' => '0.2.4',
+			'version' => '0.2.5',
 			'author' => 'Robin Sallis',
 			'href' => 'https://github.com/Toutouwai/AutoTemplateStubs',
 			'icon' => 'code',
 			'singular' => true,
 			'autoload' => true,
-			'requires' => 'ProcessWire>=3.0.0',
+			'requires' => 'ProcessWire>=3.0.16',
 		);
 	}
 
@@ -46,7 +46,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 	public function __construct() {
 		parent::__construct();
 		$this->class_prefix = 'tpl_';
-		$this->stubs_path_relative = '/site/templates/AutoTemplateStubs/';
+		$this->stubs_path_relative = '/site/templates/';
 	}
 
 	/**
@@ -194,18 +194,25 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 		$data = $event->arguments(1);
 		if($class != $this) return;
 		$regenerate_stubs = false;
+		// Class name prefix changed
 		if($data['class_prefix'] !== $this->class_prefix) {
-			// Class name prefix changed so regenerate all stub files
+			// Delete all existing stubs before changing the prefix
+			$this->deleteAllTemplateStubs();
+			// Change prefix and regenerate stubs
 			$this->class_prefix = $data['class_prefix'];
 			$regenerate_stubs = true;
 		}
-		elseif($data['stubs_path_relative'] !== $this->stubs_path_relative) {
-			// Stubs relative path changed so regenerate all stub files
+		// Stubs relative path changed
+		if($data['stubs_path_relative'] !== $this->stubs_path_relative) {
+			// Delete all existing stubs and stubs dir before changing the relative path
+			$this->deleteAllTemplateStubs();
+			@rmdir($this->getStubsPath());
+			// Change relative path and regenerate stubs
 			$this->stubs_path_relative = $data['stubs_path_relative'];
 			$regenerate_stubs = true;
 		}
-		elseif(!empty($data['regenerate_stubs'])) {
-			// Regenerate template stubs checkbox checked
+		// Regenerate template stubs checkbox checked
+		if(!empty($data['regenerate_stubs'])) {
 			$regenerate_stubs = true;
 			$this->message($this->_('Template stubs regenerated.'));
 			unset($data['regenerate_stubs']);
@@ -213,8 +220,6 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 		$event->arguments(1, $data);
 		// Regenerate stubs when needed
 		if($regenerate_stubs) {
-			$stubs_path = $this->getStubsPath();
-			if(!is_dir($stubs_path)) $this->wire()->files->mkdir($stubs_path);
 			$this->regenerateAllStubs();
 		}
 	}
@@ -267,7 +272,9 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 			}
 		}
 		$contents .= "\n */\nclass $class_name extends Page {}";
-		file_put_contents($this->getStubsPath() . "$class_name.php", $contents);
+		$stubs_path = $this->getStubsPath();
+		if(!is_dir($stubs_path)) $this->wire()->files->mkdir($stubs_path, true);
+		file_put_contents($stubs_path . "$class_name.php", $contents);
 	}
 
 	/**
@@ -295,7 +302,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 	 * Delete stub files for all templates
 	 */
 	protected function deleteAllTemplateStubs() {
-		$stub_files = glob($this->getStubsPath() . '*');
+		$stub_files = glob($this->getStubsPath() .  $this->class_prefix . '*' . '.php');
 		foreach($stub_files as $file) {
 			if(is_file($file)) unlink($file);
 		}
@@ -313,15 +320,17 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 	 * Get full path to stubs directory
 	 */
 	protected function getStubsPath() {
-		return $this->wire()->config->paths->root . ltrim($this->stubs_path_relative, '/');
+		$path = $this->wire()->config->paths->root;
+		$relative_path = trim($this->stubs_path_relative, '/');
+		if($relative_path) $path .= $relative_path . '/';
+		$path .= 'AutoTemplateStubs/';
+		return $path;
 	}
 
 	/**
 	 * Install
 	 */
 	public function ___install() {
-		$stubs_path = $this->getStubsPath();
-		if(!is_dir($stubs_path)) $this->wire()->files->mkdir($stubs_path);
 		$this->generateAllTemplateStubs();
 	}
 
@@ -338,10 +347,19 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 			if(is_dir($old_stubs_dir)) {
 				$this->wire()->files->rmdir($old_stubs_dir, true);
 			}
+			// Regenerate stubs
+			$this->regenerateAllStubs();
 		}
 
-		// Regenerate stubs
-		$this->regenerateAllStubs();
+		// Upgrade from < v0.2.5
+		// Attempt to update stubs path
+		if(version_compare($fromVersion, '0.2.5', '<')) {
+			$old_stubs_path = rtrim($this->stubs_path_relative, '/');
+			if(substr($old_stubs_path, -17) === 'AutoTemplateStubs') {
+				$new_stubs_path = substr($old_stubs_path, 0, -17);
+				$this->wire()->modules->saveConfig($this, 'stubs_path_relative', $new_stubs_path);
+			}
+		}
 	}
 
 	/**
@@ -375,8 +393,8 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 		$f = $modules->get('InputfieldText');
 		$f_name = 'stubs_path_relative';
 		$f->name = $f_name;
-		$f->label = $this->_('Stubs directory path');
-		$f->description = $this->_('The location where the stub files will be created, relative to the site root. Default: /site/templates/AutoTemplateStubs/');
+		$f->label = $this->_('Stubs parent directory path');
+		$f->description = $this->_('The location where the AutoTemplateStubs directory will be created, relative to the site root. Default: /site/templates/');
 		$f->value = $this->$f_name;
 		$inputfields->add($f);
 
