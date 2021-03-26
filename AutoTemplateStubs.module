@@ -15,7 +15,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 			'icon' => 'code',
 			'singular' => true,
 			'autoload' => true,
-			'requires' => 'ProcessWire>=3.0.16',
+			'requires' => 'ProcessWire>=3.0.113',
 		);
 	}
 
@@ -204,7 +204,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 		}
 		// Stubs relative path changed
 		if($data['stubs_path_relative'] !== $this->stubs_path_relative) {
-			// Delete all existing stubs and stubs dir before changing the relative path
+			// Delete all existing stubs and stubs dir (if empty) before changing the relative path
 			$this->deleteAllTemplateStubs();
 			@rmdir($this->getStubsPath());
 			// Change relative path and regenerate stubs
