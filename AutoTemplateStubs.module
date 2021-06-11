@@ -9,7 +9,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 		return array(
 			'title' => 'Auto Template Stubs',
 			'summary' => 'Automatically creates stub files for templates when fields or fieldgroups are saved.',
-			'version' => '0.2.5',
+			'version' => '0.2.6',
 			'author' => 'Robin Sallis',
 			'href' => 'https://github.com/Toutouwai/AutoTemplateStubs',
 			'icon' => 'code',
@@ -251,7 +251,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 	 */
 	protected function generateTemplateStub(Template $template) {
 		if($this->custom_page_class_compatible) {
-			$class_name = ucfirst($this->wire()->sanitizer()->camelCase($template->name)) . 'Page';
+			$class_name = ucfirst($this->wire()->sanitizer->camelCase($template->name)) . 'Page';
 		} else {
 			$class_name = $this->class_prefix . str_replace('-',  '_', $template->name);
 		}
