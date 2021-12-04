@@ -9,7 +9,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 		return array(
 			'title' => 'Auto Template Stubs',
 			'summary' => 'Automatically creates stub files for templates when fields or fieldgroups are saved.',
-			'version' => '0.2.6',
+			'version' => '0.2.7',
 			'author' => 'Robin Sallis',
 			'href' => 'https://github.com/Toutouwai/AutoTemplateStubs',
 			'icon' => 'code',
@@ -73,7 +73,12 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 			'FieldtypeDatetime' => 'int|string',
 			'FieldtypeEmail' => 'string',
 			'FieldtypeFieldsetPage' => function (Field $field) {
-				return "FieldsetPage|{$this->class_prefix}repeater_{$field->name}";
+				if($this->custom_page_class_compatible) {
+					$class_name = ucfirst($this->wire()->sanitizer->camelCase($field->name)) . 'Page';
+					return "FieldsetPage|Repeater{$class_name}";
+				} else {
+					return "FieldsetPage|{$this->class_prefix}repeater_{$field->name}";
+				}
 			},
 			'FieldtypeFile' => function (Field $field) {
 				switch($field->outputFormat) {
@@ -118,7 +123,12 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 			'FieldtypePageTitleLanguage' => 'string',
 			'FieldtypePassword' => 'Password',
 			'FieldtypeRepeater' => function (Field $field) {
-				return "RepeaterPageArray|{$this->class_prefix}repeater_{$field->name}[]";
+				if($this->custom_page_class_compatible) {
+					$class_name = ucfirst($this->wire()->sanitizer->camelCase($field->name)) . 'Page';
+					return "RepeaterPageArray|Repeater{$class_name}[]";
+				} else {
+					return "RepeaterPageArray|{$this->class_prefix}repeater_{$field->name}[]";
+				}
 			},
 			'FieldtypeSelector' => 'string',
 			'FieldtypeText' => 'string',
