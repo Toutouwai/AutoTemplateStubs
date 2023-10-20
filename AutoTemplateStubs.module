@@ -9,7 +9,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 		return array(
 			'title' => 'Auto Template Stubs',
 			'summary' => 'Automatically creates stub files for templates when fields or fieldgroups are saved.',
-			'version' => '0.2.7',
+			'version' => '0.3.0',
 			'author' => 'Robin Sallis',
 			'href' => 'https://github.com/Toutouwai/AutoTemplateStubs',
 			'icon' => 'code',
@@ -135,6 +135,9 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 			'FieldtypeTextLanguage' => 'string',
 			'FieldtypeTextarea' => 'string',
 			'FieldtypeTextareaLanguage' => 'string',
+			'FieldtypeCombo' => function (Field $field) {
+				return "ComboValue_{$field->name}";
+			},
 		);
 	}
 
@@ -242,6 +245,15 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 	 * @return array
 	 */
 	protected function getFieldInfo(Field $field, Template $template = null) {
+		// If Combo field then create ComboValue class stub for the field
+		if($field instanceof ComboField) {
+			$settings = $field->getComboSettings();
+			$phpdoc = $settings->toPhpDoc(false, true);
+			$class_name = "ComboValue_{$field->name}";
+			$stubs_path = $this->getStubsPath();
+			if(!is_dir($stubs_path)) $this->wire()->files->mkdir($stubs_path, true);
+			$this->wire()->files->filePutContents($stubs_path . "$class_name.php", $phpdoc);
+		}
 		if($template) $field = $template->fieldgroup->getFieldContext($field);
 		$field_type = (string) $field->type;
 		$return_types = $this->getReturnTypes();
@@ -273,18 +285,11 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 			if(in_array((string) $field->type, $this->skip_fieldtypes)) continue;
 			$field_info = $this->getFieldInfo($field, $template);
 			$contents .= "\n * @property {$field_info['returns']} \${$field->name} {$field_info['label']}";
-			if($this->wire()->modules->isInstalled('FieldAliases') && $field->fa_aliases) {
-				$fa = $this->wire()->modules->get('FieldAliases');
-				foreach(explode(' ', $field->fa_aliases) as $alias) {
-					$alias_str = $fa->open_delimiter . $alias . $fa->close_delimiter;
-					$contents .= "\n * @property {$field_info['returns']} \$$alias_str {$field_info['label']}";
-				}
-			}
 		}
-		$contents .= "\n */\nclass $class_name extends Page {}";
+		$contents .= "\n */\nclass $class_name extends Page {}\n";
 		$stubs_path = $this->getStubsPath();
 		if(!is_dir($stubs_path)) $this->wire()->files->mkdir($stubs_path, true);
-		file_put_contents($stubs_path . "$class_name.php", $contents);
+		$this->wire()->files->filePutContents($stubs_path . "$class_name.php", $contents);
 	}
 
 	/**
