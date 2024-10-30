@@ -3,23 +3,6 @@
 class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 
 	/**
-	 * Module information
-	 */
-	public static function getModuleInfo() {
-		return array(
-			'title' => 'Auto Template Stubs',
-			'summary' => 'Automatically creates stub files for templates when fields or fieldgroups are saved.',
-			'version' => '0.3.0',
-			'author' => 'Robin Sallis',
-			'href' => 'https://github.com/Toutouwai/AutoTemplateStubs',
-			'icon' => 'code',
-			'singular' => true,
-			'autoload' => true,
-			'requires' => 'ProcessWire>=3.0.113',
-		);
-	}
-
-	/**
 	 * Skip these fieldtypes because they aren't usable within a template file
 	 */
 	public $skip_fieldtypes = array(
@@ -45,6 +28,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 	 */
 	public function __construct() {
 		parent::__construct();
+		$this->custom_page_class_compatible = 0;
 		$this->class_prefix = 'tpl_';
 		$this->stubs_path_relative = '/site/templates/';
 	}
@@ -207,11 +191,13 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 		$data = $event->arguments(1);
 		if($class != $this) return;
 		$regenerate_stubs = false;
+		// Compatibility with custom Page classes setting changed
+		if($data['custom_page_class_compatible'] !== $this->custom_page_class_compatible) {
+			$this->custom_page_class_compatible = $data['custom_page_class_compatible'];
+			$regenerate_stubs = true;
+		}
 		// Class name prefix changed
 		if($data['class_prefix'] !== $this->class_prefix) {
-			// Delete all existing stubs before changing the prefix
-			$this->deleteAllTemplateStubs();
-			// Change prefix and regenerate stubs
 			$this->class_prefix = $data['class_prefix'];
 			$regenerate_stubs = true;
 		}
@@ -317,7 +303,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 	 * Delete stub files for all templates
 	 */
 	protected function deleteAllTemplateStubs() {
-		$stub_files = glob($this->getStubsPath() .  $this->class_prefix . '*' . '.php');
+		$stub_files = glob($this->getStubsPath() .  '*' . '.php');
 		foreach($stub_files as $file) {
 			if(is_file($file)) unlink($file);
 		}
