@@ -3,7 +3,7 @@
 $info = array(
 	'title' => 'Auto Template Stubs',
 	'summary' => 'Automatically creates stub files for templates when fields or fieldgroups are saved.',
-	'version' => '0.3.1',
+	'version' => '0.4.0',
 	'author' => 'Robin Sallis',
 	'href' => 'https://github.com/Toutouwai/AutoTemplateStubs',
 	'icon' => 'code',
