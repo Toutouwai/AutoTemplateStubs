@@ -41,7 +41,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 		$this->addHookAfter('Fields::saveFieldgroupContext', $this, 'fieldContextSaved');
 		$this->addHookBefore('Fieldgroups::save', $this, 'fieldgroupSaved');
 		$this->addHookAfter('Fieldgroups::delete', $this, 'fieldgroupDeleted');
-		$this->addHookBefore('Modules::saveModuleConfigData', $this, 'moduleConfigSaved');
+		$this->addHookBefore('Modules::saveConfig', $this, 'moduleConfigSaved');
 	}
 
 	/**
@@ -190,6 +190,8 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 		$class = $event->arguments(0);
 		$data = $event->arguments(1);
 		if($class != $this) return;
+		// saveConfig() can also be called with a single property name and value
+		if(!is_array($data)) return;
 		$regenerate_stubs = false;
 		// Compatibility with custom Page classes setting changed
 		if($data['custom_page_class_compatible'] !== $this->custom_page_class_compatible) {
