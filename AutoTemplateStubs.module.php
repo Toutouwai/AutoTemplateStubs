@@ -232,7 +232,7 @@ class AutoTemplateStubs extends WireData implements Module, ConfigurableModule {
 	 * @param Template|null $template
 	 * @return array
 	 */
-	protected function getFieldInfo(Field $field, Template $template = null) {
+	protected function getFieldInfo(Field $field, $template = null) {
 		// If Combo field then create ComboValue class stub for the field
 		if($field instanceof ComboField) {
 			$settings = $field->getComboSettings();
